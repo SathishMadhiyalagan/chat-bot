@@ -77,3 +77,21 @@ export const getUploadedFiles = async (token) => {
     throw error.response ? error.response.data : error;
   }
 };
+
+
+
+// Function to perform RAG processing for a specific file
+export const performRagForFile = async (fileId, token) => {
+  try {
+    const response = await axios.get(`http://127.0.0.1:8000/api/genai/perform-rag/${fileId}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // Pass the JWT token for authentication
+      },
+    });
+    console.log("RAG processing response:", response.data); // Log the response to check the result
+    return response.data;
+  } catch (error) {
+    console.error("Error performing RAG processing:", error.response?.data || error.message);
+    throw error.response ? error.response.data : error;
+  }
+};
