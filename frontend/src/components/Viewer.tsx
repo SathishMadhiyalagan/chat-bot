@@ -1,14 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSelector, useDispatch } from "react-redux";
 import axios from 'axios';
 
 export default function ChatUI() {
+
+  const dispatch = useDispatch();
+
+  const { user, isAuthenticated, status, error1 } = useSelector(
+    (state) => state.auth
+  );
+
   const [query, setQuery] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  
+
   // Replace with dynamic user ID if needed
-  const userId = 4;
+  const userId = user.id;
 
   // Create a reference for scrolling to the bottom
   const bottomOfChat = useRef(null);
@@ -17,7 +27,7 @@ export default function ChatUI() {
   const fetchChatHistory = async () => {
     try {
       const response = await axios.get(`http://127.0.0.1:8000/api/genai/chat_history/${userId}/`);
-      setChatHistory(response.data);
+      setChatHistory(response.data.reverse());
       console.log(response.data);
     } catch (err) {
       console.error('Failed to load chat history:', err.message);

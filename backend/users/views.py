@@ -16,15 +16,24 @@ from .models import UserRole,AuthUserExt,File
 
 # Custom Token Serializer
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT token serializer to include username in the response.
+    """
     def validate(self, attrs):
         data = super().validate(attrs)
         data['username'] = self.user.username
         return data
 
 class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Custom JWT token view for authentication.
+    """
     serializer_class = CustomTokenObtainPairSerializer
 
 class RegisterView(APIView):
+    """
+    User registration view. Allows new users to register by providing username, email, and password.
+    """
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')
@@ -80,6 +89,9 @@ class RegisterView(APIView):
 
 # Logout
 class LogoutView(APIView):
+    """
+    Logout view to handle user logout by invalidating the refresh token.
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -93,6 +105,9 @@ class LogoutView(APIView):
         
 
 class UserInfoView(APIView):
+    """
+    View to fetch the information of the authenticated user.
+    """
     permission_classes = [IsAuthenticated]  # Only authenticated users can access this view
 
     def get(self, request):
@@ -143,6 +158,9 @@ class UserInfoView(APIView):
 
 
 class AllUsersView(APIView):
+    """
+    View to fetch all users and their associated roles.
+    """
     permission_classes = [IsAuthenticated]  # Restrict access to authenticated users
 
     def get(self, request):
@@ -234,7 +252,7 @@ def update_user_role(request, user_id):
 @api_view(['POST'])
 def upload_file(request):
     """
-    Upload an image file to the server.
+    Upload a file (image) to the server. Creates a new file record for the user.
     """
     if request.method == 'POST':
         file = request.FILES.get('file')  # Access the uploaded file
