@@ -36,7 +36,7 @@ This project is a **Document Management and Q&A Application** designed to provid
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/yourusername/document-management-qa-app.git
+   git clone https://github.com/SathishMadhiyalagan/chat-bot
    cd backend
    ```
 
@@ -47,6 +47,11 @@ This project is a **Document Management and Q&A Application** designed to provid
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows use 'venv\Scripts\activate'
+   django-admin startproject backend
+   cd backend
+   python manage.py startapp users
+   python manage.py startapp genai
+
    ```
 
 3. **Install dependencies**:
