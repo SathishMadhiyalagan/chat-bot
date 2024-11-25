@@ -10,6 +10,12 @@ from django.http import JsonResponse
 from users.models import File
 
 
+
+from rest_framework.exceptions import ValidationError
+from django.contrib.auth.models import User
+from .models import UserMessage
+
+
 @api_view(['GET'])
 def perform_rag_lll(request, file_id):
     """
@@ -132,27 +138,71 @@ def generate_answer(prompt: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating answer: {str(e)}")
 
+# @api_view(['POST'])
+# def handle_query(request):
+#     """
+#     Handles user queries by fetching relevant context from the database
+#     and generating an answer using Gemini Generative AI.
+#     """
+#     # Parse the query from the request data
+#     query = request.data.get('query')
+
+#     # Validate that the query is not empty
+#     if not query or query.strip() == "":
+#         raise ValidationError("Query cannot be empty.")
+
+#     # Fetch context from the database using the query
+#     context = get_relevant_context_from_db(query)
+    
+#     # Generate the RAG prompt
+#     prompt = generate_rag_prompt(query, context)
+    
+#     # Generate the answer using Gemini
+#     answer = generate_answer(prompt)
+
+#     # Return the response
+#     return Response({
+#         "query": query,
+#         "context": context,
+#         "answer": answer
+#     })
+
+
+
+
+
 @api_view(['POST'])
 def handle_query(request):
     """
-    Handles user queries by fetching relevant context from the database
-    and generating an answer using Gemini Generative AI.
+    Handles user queries by generating an answer and saving the interaction.
     """
-    # Parse the query from the request data
+    # Extract user_id and query from request data
+    user_id = request.data.get('user_id')
     query = request.data.get('query')
 
-    # Validate that the query is not empty
+    # Validate inputs
     if not query or query.strip() == "":
         raise ValidationError("Query cannot be empty.")
+    if not user_id:
+        raise ValidationError("User ID is required.")
 
-    # Fetch context from the database using the query
+    try:
+        # Fetch the user object
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        raise ValidationError("User not found.")
+
+    # Fetch relevant context and generate a response
     context = get_relevant_context_from_db(query)
-    
-    # Generate the RAG prompt
     prompt = generate_rag_prompt(query, context)
-    
-    # Generate the answer using Gemini
     answer = generate_answer(prompt)
+
+    # Save the chat history
+    UserMessage.objects.create(
+        user_id=user,
+        user_question=query,
+        bot_reply=answer
+    )
 
     # Return the response
     return Response({
@@ -160,3 +210,32 @@ def handle_query(request):
         "context": context,
         "answer": answer
     })
+
+
+@api_view(['GET'])
+def get_chat_history(request, user_id):
+    """
+    Retrieves chat history for the given user.
+    """
+    try:
+        # Fetch the user object
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        raise ValidationError("User not found.")
+
+    # Retrieve messages for the user
+    messages = UserMessage.objects.filter(user_id=user).order_by('-timestamp')
+
+    # Prepare the data for response
+    data = [
+        {
+            "id": message.id,
+            "user_question": message.user_question,
+            "bot_reply": message.bot_reply,
+            "timestamp": message.timestamp
+        }
+        for message in messages
+    ]
+
+    return Response(data)
+
